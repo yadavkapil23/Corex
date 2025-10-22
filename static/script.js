@@ -32,9 +32,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 💬 Message rendering functions
-  function renderUserMessage(content) {
+  function renderUserMessage(content, timestamp = null) {
+    const ts = timestamp || Date.now();
     return `
-      <div class="message user">
+      <div class="message user" data-timestamp="${ts}">
         <div class="message-avatar">
           <i class="fas fa-user"></i>
         </div>
@@ -58,23 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
           ${sourceBadge}
           <div class="message-bubble">
           <div class="message-text">${formatAnswer(content)}</div>
-          </div>
-          <div class="message-actions">
-            <button class="action-btn" title="Like">
-              <i class="fas fa-thumbs-up"></i>
-            </button>
-            <button class="action-btn" title="Dislike">
-              <i class="fas fa-thumbs-down"></i>
-            </button>
-            <button class="action-btn" title="Share">
-              <i class="fas fa-share"></i>
-            </button>
-            <button class="action-btn" title="Regenerate">
-              <i class="fas fa-redo"></i>
-            </button>
-            <button class="action-btn" title="More options">
-              <i class="fas fa-ellipsis-h"></i>
-            </button>
           </div>
         </div>
       </div>
