@@ -3,6 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.requests import Request
 from endpoints import router
+import uvicorn
 
 app = FastAPI()
 
@@ -18,3 +19,6 @@ def home(request: Request):
 
 # Include your API endpoints
 app.include_router(router)
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="127.0.0.1", port=8000)
