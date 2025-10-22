@@ -4,20 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#3b82f6" />
-  <title>NeoBot | AI Assistant</title>
+  <title>Corex | AI Assistant</title>
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link rel="stylesheet" href="/static/styles.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
   <div class="chat-container">
     <!-- Header -->
     <header class="chat-header">
       <div class="header-left">
-        <h1>NeoBot</h1>
+        <h1>Corex</h1>
         <div class="header-dropdown">
           <i class="fas fa-chevron-down"></i>
         </div>
@@ -26,16 +27,33 @@
         <button class="header-btn" title="Share">
           <i class="fas fa-share"></i>
         </button>
-        <button class="header-btn" title="More options">
-          <i class="fas fa-ellipsis-h"></i>
-        </button>
+        <div class="dropdown-container">
+          <button class="header-btn" id="optionsBtn" title="More options">
+            <i class="fas fa-ellipsis-h"></i>
+          </button>
+          <div class="dropdown-menu" id="optionsMenu">
+            <button class="dropdown-item" id="downloadTxt">
+              <i class="fas fa-file-text"></i>
+              Download as TXT
+            </button>
+            <button class="dropdown-item" id="downloadPdf">
+              <i class="fas fa-file-pdf"></i>
+              Download as PDF
+            </button>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item" id="clearChat">
+              <i class="fas fa-trash"></i>
+              Clear Chat
+            </button>
+          </div>
+        </div>
       </div>
     </header>
 
     <!-- Chat Messages -->
     <main class="chat-messages" id="chatMessages">
       <div class="welcome-message">
-        <h2>Welcome to NeoBot!</h2>
+        <h2>Welcome to Corex!</h2>
         <p>Ask me anything and I'll help you with accurate, document-backed answers.</p>
       </div>
     </main>
