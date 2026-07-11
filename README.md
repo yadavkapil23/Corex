@@ -1,13 +1,3 @@
----
-title: RAG Project
-emoji: 🧠
-colorFrom: blue
-colorTo: purple
-sdk: docker
-app_port: 8000
-python_version: 3.10
----
-
 # Corex
 
 A retrieval-augmented generation (RAG) assistant built with FastAPI and LangChain. Answers are grounded in your documents first, with Wikipedia and general LLM knowledge as fallbacks when retrieval finds nothing relevant.
