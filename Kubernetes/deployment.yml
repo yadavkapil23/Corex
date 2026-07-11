@@ -18,13 +18,12 @@ spec:
         image: yadavkapil23/rag-app:latest
         ports:
         - containerPort: 8000
-        # --- NEW CODE: INJECT HUGGINGFACE TOKEN FROM A SECRET ---
         env:
-        - name: HUGGINGFACE_API_TOKEN
+        - name: NVIDIA_API_KEY
           valueFrom:
             secretKeyRef:
-              # You must create a secret named 'huggingface-secret' beforehand
-              name: huggingface-secret
-              # Assuming the key inside the secret is also named HUGGINGFACE_API_TOKEN
-              key: HUGGINGFACE_API_TOKEN
-        # --------------------------------------------------------
+              # You must create a secret named 'nvidia-secret' beforehand
+              name: nvidia-secret
+              key: NVIDIA_API_KEY
+        - name: NVIDIA_MODEL
+          value: "openai/gpt-oss-20b"
