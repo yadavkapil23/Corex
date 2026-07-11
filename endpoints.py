@@ -3,13 +3,20 @@ import tempfile
 import uuid
 
 from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi.responses import Response
 from pydantic import BaseModel
 from typing import List, Literal, Optional
 
 router = APIRouter()
 
 from rag import get_smart_rag_response
-from vector_rag import build_vectorstore_from_file, query_uploaded_document
+from vector_rag import (
+    build_vectorstore_from_file,
+    build_vectorstore_from_text,
+    query_uploaded_document,
+    extract_text_from_image,
+    synthesize_speech,
+)
 
 # Pydantic models for request/response validation
 class Message(BaseModel):
@@ -34,6 +41,9 @@ class UploadResponse(BaseModel):
     document_id: str
     filename: str
 
+class SpeakRequest(BaseModel):
+    text: str
+
 @router.post("/query/")
 async def query_rag_system(request: QueryRequest):
     try:
@@ -54,12 +64,28 @@ async def query_rag_system(request: QueryRequest):
 _uploaded_vectorstores = {}
 
 ALLOWED_UPLOAD_EXTENSIONS = {".pdf", ".txt"}
+ALLOWED_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg"}
+IMAGE_MIME_TYPES = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg"}
 
 @router.post("/documents/upload", response_model=UploadResponse)
 async def upload_document(file: UploadFile = File(...)):
     ext = os.path.splitext(file.filename or "")[1].lower()
+
+    if ext in ALLOWED_IMAGE_EXTENSIONS:
+        try:
+            image_bytes = await file.read()
+            extracted_text = extract_text_from_image(image_bytes, IMAGE_MIME_TYPES[ext])
+            vectorstore = build_vectorstore_from_text(extracted_text, file.filename)
+            document_id = str(uuid.uuid4())
+            _uploaded_vectorstores[document_id] = vectorstore
+            return UploadResponse(document_id=document_id, filename=file.filename)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
     if ext not in ALLOWED_UPLOAD_EXTENSIONS:
-        raise HTTPException(status_code=400, detail="Only PDF and TXT files are supported.")
+        raise HTTPException(status_code=400, detail="Only PDF, TXT, PNG, and JPG files are supported.")
 
     tmp_path = None
     try:
@@ -80,6 +106,11 @@ async def upload_document(file: UploadFile = File(...)):
         if tmp_path and os.path.exists(tmp_path):
             os.remove(tmp_path)
 
+@router.delete("/documents/{document_id}")
+async def delete_document(document_id: str):
+    _uploaded_vectorstores.pop(document_id, None)
+    return {"status": "deleted"}
+
 @router.post("/documents/query", response_model=QueryResponse)
 async def query_document(request: DocumentQueryRequest):
     vectorstore = _uploaded_vectorstores.get(request.document_id)
@@ -88,7 +119,16 @@ async def query_document(request: DocumentQueryRequest):
 
     try:
         history = [msg.dict() for msg in request.conversation_history]
-        answer = query_uploaded_document(vectorstore, request.query, history)
-        return QueryResponse(query=request.query, response=answer, source="Uploaded Document")
+        answer, sources = query_uploaded_document(vectorstore, request.query, history)
+        source_label = "Uploaded Document" + (f" ({'; '.join(sources)})" if sources else "")
+        return QueryResponse(query=request.query, response=answer, source=source_label)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/speak")
+async def speak(request: SpeakRequest):
+    try:
+        audio_bytes = synthesize_speech(request.text)
+        return Response(content=audio_bytes, media_type="audio/wav")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
