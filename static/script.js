@@ -46,11 +46,16 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
   }
 
-  function renderAssistantMessage(content, source) {
+  function renderAssistantMessage(content, source, index) {
     const sourceBadge = source ? `<span class="source-badge">${escapeHtml(source)}</span>` : '';
     return `
       <div class="message assistant">
-        <div class="msg-meta"><span class="msg-sender">Corex</span>${sourceBadge}</div>
+        <div class="msg-meta">
+          <span class="msg-sender">Corex</span>${sourceBadge}
+          <button class="speak-btn" data-msg-index="${index}" title="Read aloud">
+            <i class="fas fa-volume-high"></i>
+          </button>
+        </div>
         <div class="message-text">${formatAnswer(content)}</div>
       </div>
     `;
@@ -94,11 +99,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     let html = '<div class="chat-scroll-inner">';
-    conversationHistory.forEach(msg => {
+    conversationHistory.forEach((msg, index) => {
       if (msg.role === 'user') {
         html += renderUserMessage(msg.content);
       } else {
-        html += renderAssistantMessage(msg.content, msg.source);
+        html += renderAssistantMessage(msg.content, msg.source, index);
       }
     });
     html += '</div>';
@@ -255,6 +260,59 @@ function formatAnswer(text) {
     documentUploadEl.hidden = false;
     activeDocumentEl.hidden = true;
     uploadStatus.textContent = '';
+  });
+
+  // 🎙️ Voice input (browser Speech-to-Text)
+  const micButton = document.getElementById('micButton');
+  const SpeechRecognitionImpl = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (SpeechRecognitionImpl) {
+    const recognition = new SpeechRecognitionImpl();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    let listening = false;
+
+    recognition.addEventListener('result', (e) => {
+      const transcript = e.results[0][0].transcript;
+      queryInput.value = transcript;
+    });
+
+    recognition.addEventListener('end', () => {
+      listening = false;
+      micButton.classList.remove('listening');
+    });
+
+    recognition.addEventListener('error', () => {
+      listening = false;
+      micButton.classList.remove('listening');
+    });
+
+    micButton.addEventListener('click', () => {
+      if (listening) {
+        recognition.stop();
+        return;
+      }
+      listening = true;
+      micButton.classList.add('listening');
+      recognition.start();
+    });
+  } else {
+    micButton.disabled = true;
+    micButton.title = 'Voice input is not supported in this browser';
+  }
+
+  // 🔊 Read-aloud (browser Text-to-Speech), delegated since messages re-render
+  chatMessages.addEventListener('click', (e) => {
+    const btn = e.target.closest('.speak-btn');
+    if (!btn) return;
+    const index = Number(btn.dataset.msgIndex);
+    const msg = conversationHistory[index];
+    if (!msg || !window.speechSynthesis) return;
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(msg.content);
+    window.speechSynthesis.speak(utterance);
   });
 
   // 🔗 Event listeners
