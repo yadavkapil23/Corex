@@ -153,17 +153,17 @@ function formatAnswer(text) {
     if (inner) inner.innerHTML += loadingMessage;
     scrollToBottom();
 
-    // Fold one-shot OCR text (if attached) into the query sent to the backend only
-    const effectiveQuery = attachedImageText
-      ? `Attached image (${attachedImageName}) contains the following text:\n"""\n${attachedImageText}\n"""\n\nQuestion: ${query}`
-      : query;
+    // Carry the one-shot OCR text (if attached) as separate fields so the
+    // backend can ground the answer directly, skipping document retrieval.
+    const imageText = attachedImageText;
+    const imageName = attachedImageName;
     clearAttachedImage();
 
     try {
       const endpoint = currentMode === 'document' ? '/documents/query' : '/query/';
       const body = currentMode === 'document'
         ? { query, document_id: uploadedDocument.documentId, conversation_history: getHistory() }
-        : { query: effectiveQuery, conversation_history: getHistory() };
+        : { query, conversation_history: getHistory(), attached_image_text: imageText, attached_image_name: imageName };
 
       const response = await fetch(endpoint, {
         method: 'POST',
