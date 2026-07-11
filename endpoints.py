@@ -3,7 +3,6 @@ import tempfile
 import uuid
 
 from fastapi import APIRouter, HTTPException, UploadFile, File
-from fastapi.responses import Response
 from pydantic import BaseModel
 from typing import List, Literal, Optional
 
@@ -15,7 +14,6 @@ from vector_rag import (
     build_vectorstore_from_text,
     query_uploaded_document,
     extract_text_from_image,
-    synthesize_speech,
 )
 
 # Pydantic models for request/response validation
@@ -40,9 +38,6 @@ class DocumentQueryRequest(BaseModel):
 class UploadResponse(BaseModel):
     document_id: str
     filename: str
-
-class SpeakRequest(BaseModel):
-    text: str
 
 @router.post("/query/")
 async def query_rag_system(request: QueryRequest):
@@ -122,13 +117,5 @@ async def query_document(request: DocumentQueryRequest):
         answer, sources = query_uploaded_document(vectorstore, request.query, history)
         source_label = "Uploaded Document" + (f" ({'; '.join(sources)})" if sources else "")
         return QueryResponse(query=request.query, response=answer, source=source_label)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@router.post("/speak")
-async def speak(request: SpeakRequest):
-    try:
-        audio_bytes = synthesize_speech(request.text)
-        return Response(content=audio_bytes, media_type="audio/wav")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
