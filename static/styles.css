@@ -272,6 +272,113 @@ body {
   margin: 0.25rem 0;
 }
 
+/* Mode Tabs */
+.mode-tabs {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.mode-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.mode-tab:hover {
+  color: var(--text-primary);
+  border-color: var(--accent-color);
+}
+
+.mode-tab.active {
+  background: var(--gradient-primary);
+  color: white;
+  border-color: transparent;
+}
+
+/* Document Panel */
+.document-panel {
+  padding: 1rem 1.5rem;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.document-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+  padding: 1.25rem;
+  border: 1px dashed var(--border-color);
+  border-radius: 0.75rem;
+  color: var(--text-muted);
+}
+
+.document-upload i {
+  font-size: 1.5rem;
+  color: var(--accent-tertiary);
+}
+
+.upload-btn {
+  background: var(--gradient-primary);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.upload-status {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.active-document {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  background-color: var(--bg-tertiary);
+  border-radius: 0.5rem;
+  color: var(--text-secondary);
+}
+
+.active-document i.fa-file-circle-check {
+  color: #4ade80;
+}
+
+.active-document span {
+  flex: 1;
+  font-size: 0.875rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.remove-doc-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+.remove-doc-btn:hover {
+  color: var(--text-primary);
+}
+
 /* Chat Messages */
 .chat-messages {
   flex: 1;
