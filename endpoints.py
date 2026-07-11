@@ -78,13 +78,27 @@ ALLOWED_UPLOAD_EXTENSIONS = {".pdf", ".txt"}
 ALLOWED_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg"}
 IMAGE_MIME_TYPES = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg"}
 
+# Hard cap on upload size to protect memory-constrained hosts from a single
+# large file crashing the process during embedding/OCR.
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
+
+
+async def _read_file_with_limit(file: UploadFile) -> bytes:
+    data = await file.read(MAX_UPLOAD_BYTES + 1)
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail=f"File too large. Maximum upload size is {MAX_UPLOAD_BYTES // (1024 * 1024)}MB.",
+        )
+    return data
+
 @router.post("/documents/upload", response_model=UploadResponse)
 async def upload_document(file: UploadFile = File(...)):
     ext = os.path.splitext(file.filename or "")[1].lower()
 
     if ext in ALLOWED_IMAGE_EXTENSIONS:
         try:
-            image_bytes = await file.read()
+            image_bytes = await _read_file_with_limit(file)
             extracted_text = extract_text_from_image(image_bytes, IMAGE_MIME_TYPES[ext])
             vectorstore = build_vectorstore_from_text(extracted_text, file.filename)
             document_id = str(uuid.uuid4())
@@ -92,6 +106,8 @@ async def upload_document(file: UploadFile = File(...)):
             return UploadResponse(document_id=document_id, filename=file.filename)
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e))
+        except HTTPException:
+            raise
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
@@ -100,8 +116,9 @@ async def upload_document(file: UploadFile = File(...)):
 
     tmp_path = None
     try:
+        file_bytes = await _read_file_with_limit(file)
         with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
-            tmp.write(await file.read())
+            tmp.write(file_bytes)
             tmp_path = tmp.name
 
         vectorstore = build_vectorstore_from_file(tmp_path)
@@ -111,6 +128,8 @@ async def upload_document(file: UploadFile = File(...)):
         return UploadResponse(document_id=document_id, filename=file.filename)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
@@ -124,9 +143,11 @@ async def ocr_extract(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Only PNG and JPG images are supported.")
 
     try:
-        image_bytes = await file.read()
+        image_bytes = await _read_file_with_limit(file)
         extracted_text = extract_text_from_image(image_bytes, IMAGE_MIME_TYPES[ext])
         return OcrResponse(text=extracted_text)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
