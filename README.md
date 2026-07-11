@@ -59,16 +59,17 @@ Make sure you have the following installed:
 
    Now, your FastAPI app will be running at `http://127.0.0.1:8000` 🎉!
 
-### Set up Ollama 🦙
+### Set up the NVIDIA API 🔑
 
-This project uses Ollama to run local large language models.
+This project uses NVIDIA's hosted NIM API for LLM generation — no local model download or GPU required.
 
-1.  **Install Ollama:** Follow the instructions on the [Ollama website](https://ollama.ai/) to download and install Ollama.
-
-2.  **Pull a model:** Pull a model to use with the application. This project uses `llama3`.
-    ```bash
-    ollama pull llama3
-    ```
+1. **Get an API key:** Create a free key at [build.nvidia.com](https://build.nvidia.com).
+2. **Configure it:** create a `.env` file in the project root with:
+   ```
+   NVIDIA_API_KEY=your-key-here
+   NVIDIA_MODEL=openai/gpt-oss-20b
+   ```
+   `NVIDIA_MODEL` can be swapped for any chat model available on build.nvidia.com's catalog with a "Free Endpoint".
 
 
 ## 🛠️ Features
@@ -95,9 +96,9 @@ This project is configured for a Hugging Face Space using the Docker runtime.
 4. Ensure the file `data/sample.pdf` exists (or replace it) to allow FAISS index creation on startup.
 
 Notes:
-- Models `Qwen/Qwen2-0.5B-Instruct` and `all-MiniLM-L6-v2` will be downloaded on first run; initial cold start may take several minutes.
+- Generation runs via the NVIDIA NIM API — set `NVIDIA_API_KEY` (and optionally `NVIDIA_MODEL`) as environment variables on your Space/host.
+- Only the `all-MiniLM-L6-v2` embeddings model is downloaded locally on first run.
 - Dependencies are CPU-friendly; no GPU is required.
-- If you see OOM, consider reducing `max_new_tokens` in `vector_rag.py` or swapping to an even smaller instruct model.
 
 ### Docker Deployment (Local)
 If you want to deploy your RAG system using Docker, simply build the Docker image and run the container:
