@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 🖼️ One-shot OCR attachment state (General mode only)
   let attachedImageText = null; // extracted text, folded into the next query only
   let attachedImageName = null;
+  let attachedImageDataUrl = null; // preview shown in the chat bubble
 
   function addUserMessage(content, imageDataUrl = null) {
     conversationHistory.push({
@@ -145,8 +146,8 @@ function formatAnswer(text) {
       return;
     }
 
-    // Add user message to conversation
-    addUserMessage(query);
+    // Add user message to conversation (including a preview of any attached image)
+    addUserMessage(query, attachedImageDataUrl);
     displayAllMessages();
 
     // Clear input
