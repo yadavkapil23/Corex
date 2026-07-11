@@ -3,120 +3,104 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#3b82f6" />
+  <meta name="theme-color" content="#C04A2B" />
   <title>Corex | AI Assistant</title>
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link rel="stylesheet" href="/static/styles.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-  <div class="chat-container">
-    <!-- Header -->
-    <header class="chat-header">
-      <div class="header-left">
-        <h1>Corex</h1>
-        <div class="header-dropdown">
-          <i class="fas fa-chevron-down"></i>
+  <div class="app-shell">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-title">Corex</div>
+      <button class="new-chat-btn" id="clearChatBtn">+ New Session</button>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Mode</div>
+        <div class="history-item mode-item active" id="modeGeneralBtn" data-mode="general">
+          <i class="fas fa-globe"></i> General
+        </div>
+        <div class="history-item mode-item" id="modeDocumentBtn" data-mode="document">
+          <i class="fas fa-file-lines"></i> My Document
         </div>
       </div>
-      <div class="header-right">
-        <button class="header-btn" title="Share">
-          <i class="fas fa-share"></i>
-        </button>
-        <div class="dropdown-container">
-          <button class="header-btn" id="optionsBtn" title="More options">
-            <i class="fas fa-ellipsis-h"></i>
+    </aside>
+
+    <!-- MAIN CHAT -->
+    <main class="main-area">
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <button class="sidebar-toggle" id="sidebarToggle" title="Toggle sidebar">
+            <i class="fas fa-bars"></i>
           </button>
-          <div class="dropdown-menu" id="optionsMenu">
-            <button class="dropdown-item" id="downloadTxt">
-              <i class="fas fa-file-text"></i>
-              Download as TXT
+          <div class="session-title" id="sessionTitle">General Chat</div>
+        </div>
+        <div class="top-bar-right">
+          <div class="dropdown-container">
+            <button class="icon-btn" id="optionsBtn" title="More options">
+              <i class="fas fa-ellipsis-h"></i>
             </button>
-            <button class="dropdown-item" id="downloadPdf">
-              <i class="fas fa-file-pdf"></i>
-              Download as PDF
-            </button>
-            <div class="dropdown-divider"></div>
-            <button class="dropdown-item" id="clearChat">
-              <i class="fas fa-trash"></i>
-              Clear Chat
-            </button>
+            <div class="dropdown-menu" id="optionsMenu">
+              <button class="dropdown-item" id="downloadTxt">
+                <i class="fas fa-file-text"></i>
+                Download as TXT
+              </button>
+              <button class="dropdown-item" id="downloadPdf">
+                <i class="fas fa-file-pdf"></i>
+                Download as PDF
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
 
-    <!-- Mode Tabs -->
-    <div class="mode-tabs">
-      <button class="mode-tab active" id="modeGeneralBtn" data-mode="general">
-        <i class="fas fa-globe"></i>
-        General
-      </button>
-      <button class="mode-tab" id="modeDocumentBtn" data-mode="document">
-        <i class="fas fa-file-lines"></i>
-        My Document
-      </button>
-    </div>
+      <!-- Document Upload Panel (shown in "My Document" mode) -->
+      <div class="document-panel" id="documentPanel" hidden>
+        <div class="document-upload" id="documentUpload">
+          <i class="fas fa-cloud-arrow-up"></i>
+          <p>Upload a PDF or TXT file, then ask questions about it.</p>
+          <label class="upload-btn" for="documentFileInput">
+            Choose File
+            <input type="file" id="documentFileInput" accept=".pdf,.txt" hidden />
+          </label>
+          <span class="upload-status" id="uploadStatus"></span>
+        </div>
+        <div class="active-document" id="activeDocument" hidden>
+          <i class="fas fa-file-circle-check"></i>
+          <span id="activeDocumentName"></span>
+          <button class="remove-doc-btn" id="removeDocumentBtn" title="Remove document">
+            <i class="fas fa-xmark"></i>
+          </button>
+        </div>
+      </div>
 
-    <!-- Document Upload Panel (shown in "My Document" mode) -->
-    <div class="document-panel" id="documentPanel" hidden>
-      <div class="document-upload" id="documentUpload">
-        <i class="fas fa-cloud-arrow-up"></i>
-        <p>Upload a PDF or TXT file, then ask questions about it.</p>
-        <label class="upload-btn" for="documentFileInput">
-          Choose File
-          <input type="file" id="documentFileInput" accept=".pdf,.txt" hidden />
-        </label>
-        <span class="upload-status" id="uploadStatus"></span>
+      <div class="chat-scroll" id="chatMessages">
+        <div class="welcome-message">
+          <h2>Welcome to Corex</h2>
+          <p>Ask me anything and I'll help you with accurate, document-backed answers.</p>
+        </div>
       </div>
-      <div class="active-document" id="activeDocument" hidden>
-        <i class="fas fa-file-circle-check"></i>
-        <span id="activeDocumentName"></span>
-        <button class="remove-doc-btn" id="removeDocumentBtn" title="Remove document">
-          <i class="fas fa-xmark"></i>
-        </button>
-      </div>
-    </div>
 
-    <!-- Chat Messages -->
-    <main class="chat-messages" id="chatMessages">
-      <div class="welcome-message">
-        <h2>Welcome to Corex!</h2>
-        <p>Ask me anything and I'll help you with accurate, document-backed answers.</p>
-      </div>
+      <footer class="input-zone">
+        <div class="input-wrapper">
+          <input
+            type="text"
+            id="queryInput"
+            placeholder="Compose your message..."
+            autocomplete="off"
+          />
+          <button id="askButton" class="send-btn" title="Send message">
+            Send <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      </footer>
     </main>
-
-    <!-- Input Area -->
-    <div class="chat-input-container">
-      <div class="chat-input-wrapper">
-        <button class="input-btn" title="Attach file">
-          <i class="fas fa-plus"></i>
-        </button>
-        <input
-          type="text"
-          id="queryInput"
-          placeholder="Ask anything"
-          autocomplete="off"
-          class="chat-input"
-        />
-        <button class="input-btn" title="Voice input">
-          <i class="fas fa-microphone"></i>
-        </button>
-        <button id="askButton" class="send-btn" title="Send message">
-          <i class="fas fa-paper-plane"></i>
-        </button>
-      </div>
-      <div class="scroll-indicator">
-        <i class="fas fa-chevron-down"></i>
-      </div>
-    </div>
   </div>
 
   <script src="/static/script.js"></script>
 </body>
 </html>
-
