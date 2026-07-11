@@ -8,7 +8,7 @@ from typing import List, Literal, Optional
 
 router = APIRouter()
 
-from rag import get_smart_rag_response
+from rag import get_smart_rag_response, answer_from_attached_image
 from vector_rag import (
     build_vectorstore_from_file,
     build_vectorstore_from_text,
@@ -24,6 +24,8 @@ class Message(BaseModel):
 class QueryRequest(BaseModel):
     query: str
     conversation_history: List[Message] = []
+    attached_image_text: Optional[str] = None
+    attached_image_name: Optional[str] = None
 
 class QueryResponse(BaseModel):
     query: str
@@ -47,6 +49,17 @@ async def query_rag_system(request: QueryRequest):
     try:
         # Convert Pydantic models to dicts for processing
         history = [msg.dict() for msg in request.conversation_history]
+
+        if request.attached_image_text:
+            response = answer_from_attached_image(
+                request.query, request.attached_image_text, history
+            )
+            return QueryResponse(
+                query=request.query,
+                response=response,
+                source=f"Scanned Image ({request.attached_image_name})" if request.attached_image_name else "Scanned Image",
+            )
+
         response, source = await get_smart_rag_response(request.query, history)
         return QueryResponse(
             query=request.query,
