@@ -15,15 +15,13 @@ RUN useradd --create-home --shell /bin/bash app && \
     chown -R app:app /home/app/.cache && \
     chown -R app:app /app
 
-# Set environment variables for Hugging Face cache
-ENV HF_HOME=/home/app/.cache/huggingface
-ENV TRANSFORMERS_CACHE=/home/app/.cache/huggingface/transformers
-ENV HF_DATASETS_CACHE=/home/app/.cache/huggingface/datasets
-
 # NVIDIA API configuration — override at runtime (docker run -e / platform secrets).
 # NVIDIA_API_KEY has no default: the app fails fast at startup if it's unset.
+# All inference (chat, vision/OCR, and embeddings) runs via NVIDIA's hosted API —
+# no local model download or GPU is required.
 ENV NVIDIA_MODEL=openai/gpt-oss-20b
 ENV NVIDIA_VISION_MODEL=nvidia/nemotron-3-nano-omni-30b-a3b-reasoning
+ENV NVIDIA_EMBEDDING_MODEL=nvidia/nv-embedqa-e5-v5
 
 # Copy the requirements file into the container
 COPY requirements.txt .
