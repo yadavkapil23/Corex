@@ -272,6 +272,48 @@ function formatAnswer(text) {
     uploadStatus.textContent = '';
   });
 
+  // 🖼️ One-shot image attach + OCR (General mode) — scans an image inline for
+  // a single question, then discards the extracted text (no vector store).
+  const imageAttachInput = document.getElementById('imageAttachInput');
+  const attachedImagePreview = document.getElementById('attachedImagePreview');
+  const attachedImageNameEl = document.getElementById('attachedImageName');
+  const removeAttachedImageBtn = document.getElementById('removeAttachedImageBtn');
+
+  function clearAttachedImage() {
+    attachedImageText = null;
+    attachedImageName = null;
+    attachedImagePreview.hidden = true;
+    imageAttachInput.value = '';
+  }
+
+  imageAttachInput.addEventListener('change', async () => {
+    const file = imageAttachInput.files[0];
+    if (!file) return;
+
+    attachedImageNameEl.textContent = `Scanning ${file.name}...`;
+    attachedImagePreview.hidden = false;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('/ocr/extract', { method: 'POST', body: formData });
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.detail || `Server returned ${response.status}`);
+      }
+      const data = await response.json();
+      attachedImageText = data.text;
+      attachedImageName = file.name;
+      attachedImageNameEl.textContent = file.name;
+    } catch (err) {
+      alert(`Failed to scan image: ${err.message}`);
+      clearAttachedImage();
+    }
+  });
+
+  removeAttachedImageBtn.addEventListener('click', clearAttachedImage);
+
   // 🎙️ Voice input (browser Speech-to-Text)
   const micButton = document.getElementById('micButton');
   const SpeechRecognitionImpl = window.SpeechRecognition || window.webkitSpeechRecognition;
