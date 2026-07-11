@@ -6,6 +6,7 @@ python-dotenv
 langchain-huggingface
 faiss-cpu
 jinja2
+python-multipart
 wikipedia
 pypdf
 sentence-transformers 
