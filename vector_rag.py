@@ -51,6 +51,7 @@ vision_llm = ChatOpenAI(
     model=NVIDIA_VISION_MODEL,
     temperature=0.0,
     max_tokens=2048,
+    timeout=60,
 )
 
 
@@ -94,9 +95,10 @@ retriever = vectorstore.as_retriever()
 
 # FAISS uses L2 distance by default: lower = more similar. Chunks scoring above
 # this are considered irrelevant "noise" matches and dropped before generation.
-# Calibrated empirically against all-MiniLM-L6-v2, where on-topic chunks for a
-# vague query typically score ~1.5-2.0 and unrelated chunks score higher.
-RELEVANCE_DISTANCE_THRESHOLD = 1.8
+# Calibrated empirically against all-MiniLM-L6-v2: prose documents score ~1.5-1.8
+# for vague queries, but short/sparse content (OCR output, code snippets) can
+# score up to ~2.0 even when genuinely relevant, so the threshold is set above that.
+RELEVANCE_DISTANCE_THRESHOLD = 2.1
 
 
 def _retrieve_relevant(vectorstore: FAISS, query: str, k: int = 4):
