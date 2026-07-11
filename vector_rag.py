@@ -2,17 +2,11 @@ from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_community.vectorstores import FAISS
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import ChatOpenAI
-# Use the generic HuggingFaceEmbeddings for the smaller model
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_core.embeddings import Embeddings
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
-
-# Set cache directories with fallback for permission issues
-os.environ.setdefault('HF_HOME', '/tmp/huggingface_cache')
-os.environ.setdefault('TRANSFORMERS_CACHE', '/tmp/huggingface_cache/transformers')
-os.environ.setdefault('HF_DATASETS_CACHE', '/tmp/huggingface_cache/datasets')
 
 NVIDIA_API_KEY = os.environ.get("NVIDIA_API_KEY")
 NVIDIA_MODEL = os.environ.get("NVIDIA_MODEL", "openai/gpt-oss-20b")
@@ -77,8 +71,38 @@ def extract_text_from_image(image_bytes: bytes, mime_type: str) -> str:
     response = vision_llm.invoke([message])
     return response.content.strip()
 
-# Use the lighter all-MiniLM-L6-v2 embeddings model
-embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2") 
+NVIDIA_EMBEDDING_MODEL = os.environ.get("NVIDIA_EMBEDDING_MODEL", "nvidia/nv-embedqa-e5-v5")
+
+
+class NvidiaEmbeddings(Embeddings):
+    """
+    Embeddings via NVIDIA's hosted NIM API. Replaces a locally-run
+    sentence-transformers/torch model to keep the app's memory footprint
+    small enough for memory-constrained free-tier hosts (e.g. Render's 512MB cap).
+    """
+
+    def __init__(self, api_key: str, model: str):
+        from openai import OpenAI
+        self._client = OpenAI(base_url="https://integrate.api.nvidia.com/v1", api_key=api_key)
+        self._model = model
+
+    def _embed(self, texts: list, input_type: str) -> list:
+        response = self._client.embeddings.create(
+            input=texts,
+            model=self._model,
+            encoding_format="float",
+            extra_body={"input_type": input_type, "truncate": "NONE"},
+        )
+        return [item.embedding for item in response.data]
+
+    def embed_documents(self, texts: list) -> list:
+        return self._embed(texts, "passage")
+
+    def embed_query(self, text: str) -> list:
+        return self._embed([text], "query")[0]
+
+
+embeddings = NvidiaEmbeddings(api_key=NVIDIA_API_KEY, model=NVIDIA_EMBEDDING_MODEL)
 
 # --- DOCUMENT LOADING & CHUNKING ---
 loader = PyPDFLoader("data/sample.pdf") # Correct path for Docker: data/sample.pdf
