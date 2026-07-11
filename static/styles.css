@@ -627,10 +627,44 @@ body {
 /* Responsive */
 @media (max-width: 768px) {
   .sidebar {
-    position: absolute;
+    position: fixed;
+    top: 0;
+    left: 0;
     z-index: 100;
     height: 100%;
     background: var(--bg-paper);
+    box-shadow: 0 0 24px rgba(0, 0, 0, 0.3);
+  }
+
+  /* On mobile the sidebar starts hidden (off-canvas) and only appears when
+     explicitly opened — the desktop default of "visible unless collapsed"
+     would otherwise squeeze the main content into a thin sliver. */
+  .sidebar:not(.mobile-open) {
+    width: 0;
+    padding-left: 0;
+    padding-right: 0;
+    border-right: none;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .sidebar.mobile-open {
+    width: 80%;
+    max-width: 280px;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 99;
+  }
+
+  .sidebar-backdrop.show {
+    display: block;
   }
 
   .top-bar,
