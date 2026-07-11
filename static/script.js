@@ -6,6 +6,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // 💬 Conversation state management
   let conversationHistory = [];
 
+  // 📄 Document mode state
+  let currentMode = 'general'; // 'general' | 'document'
+  let uploadedDocument = null; // { documentId, filename }
+
   function addUserMessage(content) {
     conversationHistory.push({
       role: 'user',
@@ -140,6 +144,11 @@ function formatAnswer(text) {
     const query = queryInput.value.trim();
     if (!query) return;
 
+    if (currentMode === 'document' && !uploadedDocument) {
+      alert('Please upload a document first.');
+      return;
+    }
+
     // Add user message to conversation
     addUserMessage(query);
     displayAllMessages();
@@ -153,19 +162,23 @@ function formatAnswer(text) {
     scrollToBottom();
 
     try {
-      // Send conversation history to backend
-      const response = await fetch('/query/', {
+      const endpoint = currentMode === 'document' ? '/documents/query' : '/query/';
+      const body = currentMode === 'document'
+        ? { query, document_id: uploadedDocument.documentId, conversation_history: getHistory() }
+        : { query, conversation_history: getHistory() };
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          query: query,
-          conversation_history: getHistory()
-        })
+        body: JSON.stringify(body)
       });
 
-      if (!response.ok) throw new Error(`Server returned ${response.status}`);
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.detail || `Server returned ${response.status}`);
+      }
       const data = await response.json();
 
       // Remove loading message and add assistant response
@@ -180,6 +193,70 @@ function formatAnswer(text) {
       displayAllMessages();
     }
 }
+
+  // 🔀 Mode switching
+  const modeGeneralBtn = document.getElementById('modeGeneralBtn');
+  const modeDocumentBtn = document.getElementById('modeDocumentBtn');
+  const documentPanel = document.getElementById('documentPanel');
+
+  function setMode(mode) {
+    currentMode = mode;
+    modeGeneralBtn.classList.toggle('active', mode === 'general');
+    modeDocumentBtn.classList.toggle('active', mode === 'document');
+    documentPanel.hidden = mode !== 'document';
+    queryInput.placeholder = mode === 'document' ? 'Ask a question about your document' : 'Ask anything';
+  }
+
+  modeGeneralBtn.addEventListener('click', () => setMode('general'));
+  modeDocumentBtn.addEventListener('click', () => setMode('document'));
+
+  // 📄 Document upload handling
+  const documentFileInput = document.getElementById('documentFileInput');
+  const uploadStatus = document.getElementById('uploadStatus');
+  const documentUploadEl = document.getElementById('documentUpload');
+  const activeDocumentEl = document.getElementById('activeDocument');
+  const activeDocumentNameEl = document.getElementById('activeDocumentName');
+  const removeDocumentBtn = document.getElementById('removeDocumentBtn');
+
+  documentFileInput.addEventListener('change', async () => {
+    const file = documentFileInput.files[0];
+    if (!file) return;
+
+    uploadStatus.textContent = `Uploading ${file.name}...`;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('/documents/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.detail || `Server returned ${response.status}`);
+      }
+
+      const data = await response.json();
+      uploadedDocument = { documentId: data.document_id, filename: data.filename };
+      uploadStatus.textContent = '';
+      activeDocumentNameEl.textContent = data.filename;
+      documentUploadEl.hidden = true;
+      activeDocumentEl.hidden = false;
+    } catch (err) {
+      uploadStatus.textContent = `Upload failed: ${err.message}`;
+    } finally {
+      documentFileInput.value = '';
+    }
+  });
+
+  removeDocumentBtn.addEventListener('click', () => {
+    uploadedDocument = null;
+    documentUploadEl.hidden = false;
+    activeDocumentEl.hidden = true;
+    uploadStatus.textContent = '';
+  });
 
   // 🔗 Event listeners
   askButton.addEventListener('click', handleQuery);
