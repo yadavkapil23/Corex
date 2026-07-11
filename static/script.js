@@ -40,31 +40,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const ts = timestamp || Date.now();
     return `
       <div class="message user" data-timestamp="${ts}">
-        <div class="message-avatar">
-          <i class="fas fa-user"></i>
-        </div>
-        <div class="message-content">
-          <div class="message-bubble">
-          <div class="message-text">${escapeHtml(content)}</div>
-          </div>
-        </div>
+        <div class="msg-meta"><span class="msg-sender">You</span></div>
+        <div class="message-text">${escapeHtml(content)}</div>
       </div>
     `;
   }
 
   function renderAssistantMessage(content, source) {
-    const sourceBadge = source ? `<span class="source-badge">${source}</span>` : '';
+    const sourceBadge = source ? `<span class="source-badge">${escapeHtml(source)}</span>` : '';
     return `
       <div class="message assistant">
-        <div class="message-avatar">
-          <i class="fas fa-robot"></i>
-        </div>
-        <div class="message-content">
-          ${sourceBadge}
-          <div class="message-bubble">
-          <div class="message-text">${formatAnswer(content)}</div>
-          </div>
-        </div>
+        <div class="msg-meta"><span class="msg-sender">Corex</span>${sourceBadge}</div>
+        <div class="message-text">${formatAnswer(content)}</div>
       </div>
     `;
   }
@@ -72,19 +59,13 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderLoadingMessage() {
     return `
       <div class="message assistant">
-        <div class="message-avatar">
-          <i class="fas fa-robot"></i>
-        </div>
-        <div class="message-content">
-          <div class="message-bubble">
-            <div class="loading-message">
-              <span>Thinking...</span>
+        <div class="msg-meta"><span class="msg-sender">Corex</span></div>
+        <div class="loading-message">
+          <span>Thinking...</span>
           <div class="typing-indicator">
             <span></span>
             <span></span>
             <span></span>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -94,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderWelcomeMessage() {
     return `
       <div class="welcome-message">
-        <h2>Welcome to Corex!</h2>
+        <h2>Welcome to Corex</h2>
         <p>Ask me anything and I'll help you with accurate, document-backed answers.</p>
       </div>
     `;
@@ -112,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    let html = '';
+    let html = '<div class="chat-scroll-inner">';
     conversationHistory.forEach(msg => {
       if (msg.role === 'user') {
         html += renderUserMessage(msg.content);
@@ -120,6 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
         html += renderAssistantMessage(msg.content, msg.source);
       }
     });
+    html += '</div>';
     chatMessages.innerHTML = html;
     scrollToBottom();
   }
@@ -158,7 +140,8 @@ function formatAnswer(text) {
 
     // Show loading message
     const loadingMessage = renderLoadingMessage();
-    chatMessages.innerHTML += loadingMessage;
+    const inner = chatMessages.querySelector('.chat-scroll-inner');
+    if (inner) inner.innerHTML += loadingMessage;
     scrollToBottom();
 
     try {
@@ -198,17 +181,26 @@ function formatAnswer(text) {
   const modeGeneralBtn = document.getElementById('modeGeneralBtn');
   const modeDocumentBtn = document.getElementById('modeDocumentBtn');
   const documentPanel = document.getElementById('documentPanel');
+  const sessionTitle = document.getElementById('sessionTitle');
 
   function setMode(mode) {
     currentMode = mode;
     modeGeneralBtn.classList.toggle('active', mode === 'general');
     modeDocumentBtn.classList.toggle('active', mode === 'document');
     documentPanel.hidden = mode !== 'document';
-    queryInput.placeholder = mode === 'document' ? 'Ask a question about your document' : 'Ask anything';
+    sessionTitle.textContent = mode === 'document' ? 'My Document' : 'General Chat';
+    queryInput.placeholder = mode === 'document' ? 'Ask a question about your document' : 'Compose your message...';
   }
 
   modeGeneralBtn.addEventListener('click', () => setMode('general'));
   modeDocumentBtn.addEventListener('click', () => setMode('document'));
+
+  // 📁 Sidebar collapse toggle
+  const sidebar = document.getElementById('sidebar');
+  const sidebarToggle = document.getElementById('sidebarToggle');
+  sidebarToggle.addEventListener('click', () => {
+    sidebar.classList.toggle('collapsed');
+  });
 
   // 📄 Document upload handling
   const documentFileInput = document.getElementById('documentFileInput');
@@ -251,7 +243,14 @@ function formatAnswer(text) {
     }
   });
 
-  removeDocumentBtn.addEventListener('click', () => {
+  removeDocumentBtn.addEventListener('click', async () => {
+    if (uploadedDocument) {
+      try {
+        await fetch(`/documents/${uploadedDocument.documentId}`, { method: 'DELETE' });
+      } catch (err) {
+        console.error('Failed to delete document on server:', err);
+      }
+    }
     uploadedDocument = null;
     documentUploadEl.hidden = false;
     activeDocumentEl.hidden = true;
@@ -275,7 +274,7 @@ function formatAnswer(text) {
   const optionsMenu = document.getElementById('optionsMenu');
   const downloadTxtBtn = document.getElementById('downloadTxt');
   const downloadPdfBtn = document.getElementById('downloadPdf');
-  const clearChatBtn = document.getElementById('clearChat');
+  const clearChatBtn = document.getElementById('clearChatBtn');
 
   // Toggle dropdown menu
   optionsBtn.addEventListener('click', (e) => {
@@ -302,11 +301,10 @@ function formatAnswer(text) {
     optionsMenu.classList.remove('show');
   });
 
-  // Clear chat
+  // New session (clear chat)
   clearChatBtn.addEventListener('click', () => {
     clearConversation();
     displayAllMessages();
-    optionsMenu.classList.remove('show');
   });
 
   // Download functions
