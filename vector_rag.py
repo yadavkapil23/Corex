@@ -41,7 +41,7 @@ llm = _StringLLM(ChatOpenAI(
     api_key=NVIDIA_API_KEY,
     model=NVIDIA_MODEL,
     temperature=0.2,
-    max_tokens=512,
+    max_tokens=2048,
 ))
 
 NVIDIA_VISION_MODEL = os.environ.get("NVIDIA_VISION_MODEL", "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning")
