@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let html = '<div class="chat-scroll-inner">';
     conversationHistory.forEach((msg, index) => {
       if (msg.role === 'user') {
-        html += renderUserMessage(msg.content);
+        html += renderUserMessage(msg.content, msg.timestamp, msg.imageDataUrl);
       } else {
         html += renderAssistantMessage(msg.content, msg.source, index);
       }
@@ -287,8 +287,18 @@ function formatAnswer(text) {
   function clearAttachedImage() {
     attachedImageText = null;
     attachedImageName = null;
+    attachedImageDataUrl = null;
     attachedImagePreview.hidden = true;
     imageAttachInput.value = '';
+  }
+
+  function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   }
 
   imageAttachInput.addEventListener('change', async () => {
@@ -302,7 +312,10 @@ function formatAnswer(text) {
     formData.append('file', file);
 
     try {
-      const response = await fetch('/ocr/extract', { method: 'POST', body: formData });
+      const [response, dataUrl] = await Promise.all([
+        fetch('/ocr/extract', { method: 'POST', body: formData }),
+        readFileAsDataUrl(file)
+      ]);
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
         throw new Error(errData.detail || `Server returned ${response.status}`);
@@ -310,6 +323,7 @@ function formatAnswer(text) {
       const data = await response.json();
       attachedImageText = data.text;
       attachedImageName = file.name;
+      attachedImageDataUrl = dataUrl;
       attachedImageNameEl.textContent = file.name;
     } catch (err) {
       alert(`Failed to scan image: ${err.message}`);
