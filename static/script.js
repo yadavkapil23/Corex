@@ -14,11 +14,12 @@ document.addEventListener('DOMContentLoaded', () => {
   let attachedImageText = null; // extracted text, folded into the next query only
   let attachedImageName = null;
 
-  function addUserMessage(content) {
+  function addUserMessage(content, imageDataUrl = null) {
     conversationHistory.push({
       role: 'user',
       content: content,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      imageDataUrl: imageDataUrl
     });
   }
 
@@ -40,11 +41,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 💬 Message rendering functions
-  function renderUserMessage(content, timestamp = null) {
+  function renderUserMessage(content, timestamp = null, imageDataUrl = null) {
     const ts = timestamp || Date.now();
+    const imagePreview = imageDataUrl
+      ? `<img class="attached-image-thumb" src="${imageDataUrl}" alt="Attached image" />`
+      : '';
     return `
       <div class="message user" data-timestamp="${ts}">
         <div class="msg-meta"><span class="msg-sender">You</span></div>
+        ${imagePreview}
         <div class="message-text">${escapeHtml(content)}</div>
       </div>
     `;
