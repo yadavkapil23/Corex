@@ -682,4 +682,31 @@ body {
   .status {
     display: none;
   }
+
+  .input-zone {
+    padding: 12px;
+  }
+
+  .input-wrapper {
+    padding: 4px 4px 4px 12px;
+    gap: 8px;
+  }
+
+  .input-wrapper input {
+    font-size: 0.95rem;
+  }
+
+  /* Collapse the "Send" text label to an icon-only tap target so the
+     input field itself keeps most of the width on narrow screens. */
+  .send-btn {
+    padding: 10px 14px;
+  }
+
+  .send-btn .send-btn-label {
+    display: none;
+  }
+
+  .input-wrapper .icon-btn {
+    padding: 8px;
+  }
 }
