@@ -1,0 +1,32 @@
+# Secrets — never bake these into an image
+.env
+.env.*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environments
+venv/
+ragenv/
+ENV/
+env/
+.venv/
+
+# Git
+.git/
+.gitignore
+
+# Editor/OS cruft
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Docs not needed at runtime
+README.md
+CHANGELOG.md
+
+# Kubernetes manifests aren't part of the image
+Kubernetes/
