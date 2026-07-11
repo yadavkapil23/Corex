@@ -39,6 +39,9 @@ class UploadResponse(BaseModel):
     document_id: str
     filename: str
 
+class OcrResponse(BaseModel):
+    text: str
+
 @router.post("/query/")
 async def query_rag_system(request: QueryRequest):
     try:
@@ -100,6 +103,19 @@ async def upload_document(file: UploadFile = File(...)):
     finally:
         if tmp_path and os.path.exists(tmp_path):
             os.remove(tmp_path)
+
+@router.post("/ocr/extract", response_model=OcrResponse)
+async def ocr_extract(file: UploadFile = File(...)):
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext not in ALLOWED_IMAGE_EXTENSIONS:
+        raise HTTPException(status_code=400, detail="Only PNG and JPG images are supported.")
+
+    try:
+        image_bytes = await file.read()
+        extracted_text = extract_text_from_image(image_bytes, IMAGE_MIME_TYPES[ext])
+        return OcrResponse(text=extracted_text)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/documents/{document_id}")
 async def delete_document(document_id: str):
