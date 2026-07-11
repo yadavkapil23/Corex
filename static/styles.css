@@ -524,6 +524,34 @@ body {
   background: var(--bg-paper);
 }
 
+.attached-image-preview[hidden] {
+  display: none;
+}
+
+.attached-image-preview {
+  max-width: 800px;
+  margin: 0 auto 12px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 10px 16px;
+  background-color: var(--accent-soft);
+  border: 1px solid var(--border-soft);
+  color: var(--ink-main);
+  font-size: 0.85rem;
+}
+
+.attached-image-preview i.fa-image {
+  color: var(--accent);
+}
+
+.attached-image-preview span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .input-wrapper {
   max-width: 800px;
   margin: 0 auto;
