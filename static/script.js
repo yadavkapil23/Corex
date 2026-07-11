@@ -10,6 +10,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentMode = 'general'; // 'general' | 'document'
   let uploadedDocument = null; // { documentId, filename }
 
+  // 🖼️ One-shot OCR attachment state (General mode only)
+  let attachedImageText = null; // extracted text, folded into the next query only
+  let attachedImageName = null;
+
   function addUserMessage(content) {
     conversationHistory.push({
       role: 'user',
@@ -149,11 +153,17 @@ function formatAnswer(text) {
     if (inner) inner.innerHTML += loadingMessage;
     scrollToBottom();
 
+    // Fold one-shot OCR text (if attached) into the query sent to the backend only
+    const effectiveQuery = attachedImageText
+      ? `Attached image (${attachedImageName}) contains the following text:\n"""\n${attachedImageText}\n"""\n\nQuestion: ${query}`
+      : query;
+    clearAttachedImage();
+
     try {
       const endpoint = currentMode === 'document' ? '/documents/query' : '/query/';
       const body = currentMode === 'document'
         ? { query, document_id: uploadedDocument.documentId, conversation_history: getHistory() }
-        : { query, conversation_history: getHistory() };
+        : { query: effectiveQuery, conversation_history: getHistory() };
 
       const response = await fetch(endpoint, {
         method: 'POST',
