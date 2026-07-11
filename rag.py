@@ -31,6 +31,36 @@ def format_conversation_context(history: List[Dict], max_messages: int = 10) -> 
     
     return "\n".join(formatted_lines)
 
+def answer_from_attached_image(query: str, image_text: str, conversation_history: List[Dict] = None) -> str:
+    """
+    Answer a question grounded in text OCR'd from a one-shot attached image.
+    Bypasses document retrieval entirely — the image text IS the context.
+
+    Args:
+        query: The user's question
+        image_text: Text extracted from the attached image via OCR
+        conversation_history: List of previous messages (optional)
+
+    Returns:
+        The generated answer.
+    """
+    context_str = format_conversation_context(conversation_history or [])
+
+    prompt = "You are a helpful assistant engaged in a conversation.\n\n"
+    if context_str:
+        prompt += f"Previous conversation:\n{context_str}\n\n"
+    prompt += f"""Answer the question using ONLY the text below, extracted from an image the user attached. If it doesn't contain the answer, say so — do not make anything up.
+
+Extracted image text:
+{image_text}
+
+Current question: {query}
+Answer:"""
+
+    result = llm.invoke(prompt)
+    return result.replace(prompt, "").strip()
+
+
 async def get_smart_rag_response(query: str, conversation_history: List[Dict] = None) -> tuple[str, str]:
     """
     Get a RAG-first response: always retrieve from the local document store first
