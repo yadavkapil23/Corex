@@ -86,7 +86,18 @@
       </div>
 
       <footer class="input-zone">
+        <div class="attached-image-preview" id="attachedImagePreview" hidden>
+          <i class="fas fa-image"></i>
+          <span id="attachedImageName"></span>
+          <button class="remove-doc-btn" id="removeAttachedImageBtn" title="Remove image">
+            <i class="fas fa-xmark"></i>
+          </button>
+        </div>
         <div class="input-wrapper">
+          <label class="icon-btn" for="imageAttachInput" title="Attach an image to scan (OCR)">
+            <i class="fas fa-paperclip"></i>
+            <input type="file" id="imageAttachInput" accept=".png,.jpg,.jpeg" hidden />
+          </label>
           <input
             type="text"
             id="queryInput"
