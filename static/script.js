@@ -216,12 +216,32 @@ function formatAnswer(text) {
   modeGeneralBtn.addEventListener('click', () => setMode('general'));
   modeDocumentBtn.addEventListener('click', () => setMode('document'));
 
-  // 📁 Sidebar collapse toggle
+  // 📁 Sidebar toggle — desktop collapses in-place, mobile slides in as an overlay
   const sidebar = document.getElementById('sidebar');
   const sidebarToggle = document.getElementById('sidebarToggle');
+  const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+  const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
+
+  function closeMobileSidebar() {
+    sidebar.classList.remove('mobile-open');
+    sidebarBackdrop.classList.remove('show');
+  }
+
   sidebarToggle.addEventListener('click', () => {
-    sidebar.classList.toggle('collapsed');
+    if (isMobile()) {
+      sidebar.classList.toggle('mobile-open');
+      sidebarBackdrop.classList.toggle('show');
+    } else {
+      sidebar.classList.toggle('collapsed');
+    }
   });
+
+  sidebarBackdrop.addEventListener('click', closeMobileSidebar);
+
+  // Closing the sidebar after picking a mode/session makes sense only on mobile,
+  // where it's an overlay covering the chat — desktop keeps it open permanently.
+  modeGeneralBtn.addEventListener('click', () => { if (isMobile()) closeMobileSidebar(); });
+  modeDocumentBtn.addEventListener('click', () => { if (isMobile()) closeMobileSidebar(); });
 
   // 📄 Document upload handling
   const documentFileInput = document.getElementById('documentFileInput');
