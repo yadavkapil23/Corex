@@ -2,14 +2,11 @@ fastapi
 starlette>=0.46,<1.0
 uvicorn
 langchain
-langchain-community 
+langchain-community
 python-dotenv
-langchain-huggingface
 langchain-openai
 faiss-cpu
 jinja2
 python-multipart
 wikipedia
 pypdf
-sentence-transformers
-torch
