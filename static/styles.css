@@ -443,6 +443,25 @@ body {
   padding: 2px 6px;
 }
 
+.speak-btn {
+  background: none;
+  border: none;
+  color: var(--ink-muted);
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 0.8rem;
+  margin-left: auto;
+}
+
+.speak-btn:hover {
+  color: var(--accent);
+}
+
+#micButton.listening {
+  color: var(--accent);
+  animation: pulse 1s infinite;
+}
+
 .message-text {
   font-size: 1.1rem;
   line-height: 1.6;
