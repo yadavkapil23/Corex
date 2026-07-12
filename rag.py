@@ -32,24 +32,30 @@ def format_conversation_context(history: List[Dict], max_messages: int = 10) -> 
     return "\n".join(formatted_lines)
 
 _UNANSWERED_PHRASES = (
-    "i don't know",
-    "i do not know",
-    "don't have that information",
-    "do not have that information",
-    "doesn't contain the answer",
-    "does not contain the answer",
+    "don't know",
+    "do not know",
+    "don't have",
+    "do not have",
+    "doesn't contain",
+    "does not contain",
+    "doesn't have",
+    "does not have",
     "cannot answer",
     "can't answer",
     "no relevant information",
+    "no information",
     "not mentioned in the",
     "not contain information",
+    "unable to answer",
+    "unable to find",
 )
 
 
 def _is_unanswered(answer: str) -> bool:
     """
-    Detect an LLM refusal ("I don't know" etc.) so the fallback chain treats it
-    as retrieval having effectively failed, rather than a real grounded answer.
+    Detect an LLM refusal ("I don't know", "I don't have information on that",
+    etc.) so the fallback chain treats it as retrieval having effectively
+    failed, rather than a real grounded answer.
     """
     normalized = answer.strip().lower()
     if not normalized:
