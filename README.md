@@ -4,13 +4,13 @@ A retrieval-augmented generation (RAG) assistant built with FastAPI and LangChai
 
 ## Features
 
-- **Retrieval-first RAG** — every query searches a FAISS vector store before falling back to Wikipedia or a raw LLM answer, with citations (source file + page number) returned alongside each response.
-- **Document upload ("My Document" mode)** — upload a PDF, TXT, or image (PNG/JPG) and ask questions scoped to just that file.
-- **OCR** — image uploads (and one-shot image attachments in general chat) are read via a hosted vision model; extracted text is chunked, embedded, and made queryable like any other document.
-- **Voice input** — a mic button transcribes speech to text using the browser's native Speech Recognition API (no backend involved).
-- **Read-aloud** — assistant responses can be read back using the browser's native Speech Synthesis API.
-- **Installable as a PWA** — includes a web manifest and service worker so the app can be added to a phone or desktop home screen.
-- **NVIDIA-hosted inference** — chat generation and vision/OCR both run through NVIDIA's NIM API; only the embeddings model runs locally, so no GPU is required.
+- **Retrieval-first RAG** - every query searches a FAISS vector store before falling back to Wikipedia or a raw LLM answer, with citations (source file + page number) returned alongside each response.
+- **Document upload ("My Document" mode)** - upload a PDF, TXT, or image (PNG/JPG) and ask questions scoped to just that file.
+- **OCR** - image uploads (and one-shot image attachments in general chat) are read via a hosted vision model; extracted text is chunked, embedded, and made queryable like any other document.
+- **Voice input** - a mic button transcribes speech to text using the browser's native Speech Recognition API (no backend involved).
+- **Read-aloud** - assistant responses can be read back using the browser's native Speech Synthesis API.
+- **Installable as a PWA** - includes a web manifest and service worker so the app can be added to a phone or desktop home screen.
+- **NVIDIA-hosted inference** - chat generation and vision/OCR both run through NVIDIA's NIM API; only the embeddings model runs locally, so no GPU is required.
 
 ## Architecture
 
@@ -27,7 +27,7 @@ A retrieval-augmented generation (RAG) assistant built with FastAPI and LangChai
 ### Prerequisites
 
 - Python 3.10+
-- An NVIDIA API key — free at [build.nvidia.com](https://build.nvidia.com)
+- An NVIDIA API key - free at [build.nvidia.com](https://build.nvidia.com)
 
 ### Install and run
 
@@ -73,13 +73,13 @@ The app will be running at `http://127.0.0.1:8000`.
 
 The included [Dockerfile](Dockerfile) reads the `PORT` environment variable, so it works on most container platforms without changes.
 
-**Render / Fly.io / Railway** — connect the repo, set `NVIDIA_API_KEY` as a secret/environment variable, deploy. No GPU needed.
+**Render / Fly.io / Railway** - connect the repo, set `NVIDIA_API_KEY` as a secret/environment variable, deploy. No GPU needed.
 
 **Hugging Face Spaces (Docker SDK)**
 1. Push this repo to GitHub (or connect it directly).
 2. Create a new Space → choose the "Docker" SDK.
 3. Set `NVIDIA_API_KEY` as a Space secret.
-4. Ensure `data/sample.pdf` exists (or replace it) — it seeds the built-in document store used in general chat mode.
+4. Ensure `data/sample.pdf` exists (or replace it) - it seeds the built-in document store used in general chat mode.
 
 **Local Docker**
 
@@ -90,7 +90,7 @@ docker run -p 8000:8000 --env-file .env corex
 
 ### Known limitations
 
-- Uploaded documents are held in server memory only — they do not survive a restart, and are not shared across multiple worker processes/replicas.
+- Uploaded documents are held in server memory only - they do not survive a restart, and are not shared across multiple worker processes/replicas.
 - Uploads are capped at 10MB per file.
 
 ## License
