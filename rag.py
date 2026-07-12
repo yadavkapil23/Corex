@@ -31,6 +31,37 @@ def format_conversation_context(history: List[Dict], max_messages: int = 10) -> 
     
     return "\n".join(formatted_lines)
 
+_UNANSWERED_PHRASES = (
+    "i don't know",
+    "i do not know",
+    "don't have that information",
+    "do not have that information",
+    "doesn't contain the answer",
+    "does not contain the answer",
+    "cannot answer",
+    "can't answer",
+    "no relevant information",
+    "not mentioned in the",
+    "not contain information",
+)
+
+
+def _is_unanswered(answer: str) -> bool:
+    """
+    Detect an LLM refusal ("I don't know" etc.) so the fallback chain treats it
+    as retrieval having effectively failed, rather than a real grounded answer.
+    """
+    normalized = answer.strip().lower()
+    if not normalized:
+        return True
+    # Refusals are typically short, standalone statements — a longer answer
+    # that merely mentions one of these phrases in passing should still count
+    # as a real answer.
+    if len(normalized) > 150:
+        return False
+    return any(phrase in normalized for phrase in _UNANSWERED_PHRASES)
+
+
 def answer_from_attached_image(query: str, image_text: str, conversation_history: List[Dict] = None) -> str:
     """
     Answer a question grounded in text OCR'd from a one-shot attached image.
@@ -85,7 +116,7 @@ async def get_smart_rag_response(query: str, conversation_history: List[Dict] = 
     try:
         print("Retrieving from local vector store")
         answer, sources = query_vector_store(query, conversation_history)
-        if answer:
+        if answer and not _is_unanswered(answer):
             source_label = "Local Document" + (f" ({'; '.join(sources)})" if sources else "")
             return answer, source_label
     except Exception as e:
