@@ -1,5 +1,5 @@
 {
-  "name": "Corex | AI Assistant",
+  "name": "Corex",
   "short_name": "Corex",
   "description": "RAG-powered AI assistant with document Q&A, voice input, and OCR.",
   "start_url": "/",
