@@ -104,18 +104,7 @@ class NvidiaEmbeddings(Embeddings):
 
 embeddings = NvidiaEmbeddings(api_key=NVIDIA_API_KEY, model=NVIDIA_EMBEDDING_MODEL)
 
-# --- DOCUMENT LOADING & CHUNKING ---
-loader = PyPDFLoader("data/sample.pdf") # Correct path for Docker: data/sample.pdf
-documents = loader.load()
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-chunks = text_splitter.split_documents(documents)
-
-if not chunks:
-    raise ValueError("No document chunks found.")
-
-# Initialize FAISS and retriever
-vectorstore = FAISS.from_documents(chunks, embeddings)
-retriever = vectorstore.as_retriever()
 
 # FAISS uses L2 distance by default: lower = more similar. Chunks scoring above
 # this are considered irrelevant "noise" matches and dropped before generation.
@@ -179,24 +168,6 @@ Answer:"""
     raw_output = llm.invoke(prompt)
     answer = raw_output.replace(prompt, "").strip()
     return answer, _format_sources(scored_docs)
-
-
-def query_vector_store(query: str, conversation_history: list = None):
-    """
-    Retrieve from the built-in sample-document vector store and generate a grounded answer.
-
-    Args:
-        query: The user's current question
-        conversation_history: List of previous messages (optional)
-
-    Returns:
-        Tuple of (answer, sources) — answer is None if nothing relevant was retrieved.
-    """
-    if conversation_history is None:
-        conversation_history = []
-
-    scored_docs = _retrieve_relevant(vectorstore, query)
-    return _answer_from_docs(scored_docs, query, conversation_history)
 
 
 def build_vectorstore_from_file(file_path: str) -> FAISS:
