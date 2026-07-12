@@ -8,11 +8,10 @@ from typing import List, Literal, Optional
 
 router = APIRouter()
 
-from rag import get_smart_rag_response, answer_from_attached_image
+from rag import get_smart_rag_response, answer_from_attached_image, answer_from_uploaded_document
 from vector_rag import (
     build_vectorstore_from_file,
     build_vectorstore_from_text,
-    query_uploaded_document,
     extract_text_from_image,
 )
 
@@ -164,8 +163,7 @@ async def query_document(request: DocumentQueryRequest):
 
     try:
         history = [msg.dict() for msg in request.conversation_history]
-        answer, sources = query_uploaded_document(vectorstore, request.query, history)
-        source_label = "Uploaded Document" + (f" ({'; '.join(sources)})" if sources else "")
-        return QueryResponse(query=request.query, response=answer, source=source_label)
+        answer, source = answer_from_uploaded_document(vectorstore, request.query, history)
+        return QueryResponse(query=request.query, response=answer, source=source)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
