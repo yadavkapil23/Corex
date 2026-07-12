@@ -1,4 +1,4 @@
-from vector_rag import query_vector_store, llm # <--- FIX: Import llm here!
+from vector_rag import query_uploaded_document, llm
 import wikipedia
 from typing import List, Dict
 # REMOVED: All duplicate model/pipeline/tokenizer imports and initialization code
@@ -100,9 +100,10 @@ Answer:"""
 
 async def get_smart_rag_response(query: str, conversation_history: List[Dict] = None) -> tuple[str, str]:
     """
-    Get a RAG-first response: always retrieve from the local document store first
-    and generate a grounded answer from it. Only when retrieval finds nothing
-    relevant do we fall back to Wikipedia, then a raw LLM guess.
+    Get a response for General chat mode: pure conversational chat, no document
+    retrieval. Tries Wikipedia first (for factual lookups), then falls back to
+    the LLM's own knowledge. Document Q&A is handled separately by
+    answer_from_uploaded_document(), scoped to "My Document" mode only.
 
     Args:
         query: The user's current question
@@ -118,17 +119,7 @@ async def get_smart_rag_response(query: str, conversation_history: List[Dict] = 
 
     context_str = format_conversation_context(conversation_history)
 
-    # First: Retrieval-Augmented Generation over the local document store
-    try:
-        print("Retrieving from local vector store")
-        answer, sources = query_vector_store(query, conversation_history)
-        if answer and not _is_unanswered(answer):
-            source_label = "Local Document" + (f" ({'; '.join(sources)})" if sources else "")
-            return answer, source_label
-    except Exception as e:
-        print("Error during local vector search:", e)
-
-    # Second: Fallback to Wikipedia when retrieval found nothing relevant
+    # First: Wikipedia, for factual lookups
     try:
         summary = wikipedia.summary(query, sentences=5)
         print("Wikipedia summary found.")
@@ -170,3 +161,38 @@ Answer:"""
         print("Error during LLM fallback:", e)
 
     return "Sorry, I couldn't find any information to answer your question.", "System"
+
+
+def answer_from_uploaded_document(vectorstore, query: str, conversation_history: List[Dict] = None) -> tuple[str, str]:
+    """
+    Get a response for "My Document" mode: retrieve from the uploaded document
+    first. If it doesn't contain the answer, fall back to the LLM's own
+    knowledge rather than dead-ending on "I don't know" — the fallback is
+    clearly labeled so it's obvious the answer isn't grounded in the document.
+
+    Args:
+        vectorstore: FAISS vector store built from the uploaded document
+        query: The user's current question
+        conversation_history: List of previous messages (optional)
+
+    Returns:
+        Tuple of (response, source)
+    """
+    if conversation_history is None:
+        conversation_history = []
+
+    answer, sources = query_uploaded_document(vectorstore, query, conversation_history)
+    if answer and not _is_unanswered(answer):
+        source_label = "Uploaded Document" + (f" ({'; '.join(sources)})" if sources else "")
+        return answer, source_label
+
+    # The document didn't have the answer — fall back to the LLM's own knowledge
+    context_str = format_conversation_context(conversation_history)
+    fallback_prompt = "You are a knowledgeable assistant engaged in a conversation.\n\n"
+    if context_str:
+        fallback_prompt += f"Previous conversation:\n{context_str}\n\n"
+    fallback_prompt += f"Current question: {query}\nAnswer:"
+
+    llm_answer = llm.invoke(fallback_prompt)
+    fallback_answer = llm_answer.replace(fallback_prompt, "").strip()
+    return fallback_answer, "General Knowledge"
